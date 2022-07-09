@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import openpyxl as op
 from datetime import date,datetime,time,timedelta
 
-st.title('Personal Finance')
+st.sidebar.title('Personal Budget Model')
 
 
 
@@ -20,24 +20,26 @@ today=date.today()
 todayformatted = datetime.today().strftime('%Y-%m-%d')
 
 
-#Variables
-mortgagerate=st.sidebar.slider('Mortgage Rate %', min_value=0.0, max_value=15.0, value=4.49, step=0.01)
+#Adjustable Variables
+mortgagerate=(st.sidebar.slider('Mortgage Rate %', min_value=0.01, max_value=15.0, value=4.49, step=0.01))/100
 proratahours=st.sidebar.slider('Pro-rata Hours', min_value=0, max_value=38, value=32)
+fuelprice=st.sidebar.slider('Fuel Price', min_value=1.0, max_value=3.0, value=2.3)
 
 
+#Entered Variables
 housevalue = 600000
 carvalue = 65400
 furniture = 70000
 super = 210862.21
 odometer = 22500
-fuelprice=2.3
-fuelusage=10.2
-tyrecost = 1800     # $for all 4 replaced
+
+
+
 insurancecar = 12*137.76
 rego = 837.09
 unifreq = 2 # how many times a week i go to uni
 rentalincome = 52*625
-mortgagemin = 26 * 1028.04
+
 carloanmin = 12 * 903.39
 insurancebuilding = 12*128.6
 insurancecontents = 12*42.74
@@ -55,6 +57,8 @@ wfhdays = 199
 extradeduction=1000
 
 #Fixed Values
+fuelusage=10.2
+tyrecost = 1800     # $for all 4 replaced
 carloanrate=0.0679
 ftehours=38
 tyrefreq = 30000    # in Kms
@@ -69,7 +73,7 @@ capitalworks = 9420
 capitalallowances = 1631
 
 #Caluculations
-mortgagerate=mortgagerate/100
+mortgagemin = ((460346.22*(mortgagerate/12)*((1+(mortgagerate/12))**(12*27.5)))/((1+(mortgagerate/12))**(12*27.5)-1))*12
 prorata=proratahours/ftehours
 
 status = status[['Date', 'Account 1', 'Account 2',
@@ -155,27 +159,26 @@ inpocketincome = aftertaxincome+rentalinpocket+taxreturn
 lifeexpenses = mortgagemin+carloanmin+insurancebuilding+insurancecontents+insurancelandlord+insuracehealth+rateszucc+waterzucc+rent+telstra+power+gym+haircuts+rateswang+waterwang+unifees+lifeexpenses+carpa
 savingpotential=inpocketincome-lifeexpenses
 
-def bargraph(input):
-       
-       return
 
-col1, col2 = st.columns(2)
-data = {'totalincome':[int(totalincome)],'taxableincome':[int(taxableincome)],'taxreturn':[int(taxreturn)],'inpocketincome':[int(inpocketincome)],'savingpotential':[int(savingpotential)],'totaldeductions':[int(totaldeductions)],'taxowed':[int(taxowed)],'taxpaid':[int(taxpaid)]}
+data = {'Fields':['Total Income','Taxable Income','Tax Return','Inpocket Income','Life Expenses','Total Deductions','Tax Owed','Tax Paid','Saving Potential',]
+       ,'Values':[int(totalincome),int(taxableincome),int(taxreturn),int(inpocketincome),int(lifeexpenses),int(totaldeductions),int(taxowed),int(taxpaid),int(savingpotential)]
+       ,'Colours':['Income','Income','Income','Income','Expense','Expense','Expense','Expense','Output']}
+
 input = pd.DataFrame(data)
-fig = px.bar(data)
-fig.update_layout(yaxis_range=[0,700000])
+fig = px.bar(input, x='Fields', y='Values', color='Colours')
+fig.update_layout(yaxis_range=[0,150000])
 st.plotly_chart(fig, use_container_width=True)
 
+st.markdown('<b><p style="color:blue;font-size:20px;text-align:center;">Saving Potential: $'+ str(int(savingpotential))+'</p></b>', unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
 with col1:
-       st.markdown('<b><p style="color:green;font-size:25px;text-align:center;">Total Income: $'+str(int(totalincome))+'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:green;font-size:25px;text-align:center;">Taxable Income: $'+str(int(taxableincome))+'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:green;font-size:25px;text-align:center;">Tax Return: $'+str(int(taxreturn))+'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:green;font-size:25px;text-align:center;">Inpocket Income: $'+str(int(inpocketincome))+'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:blue;font-size:25px;text-align:center;">Saving Potential: $'+ str(int(savingpotential))+'</p></b>', unsafe_allow_html=True)
-
+       st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Total Income: $'+str(int(totalincome))+'</p></b>', unsafe_allow_html=True)
+       st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Taxable Income: $'+str(int(taxableincome))+'</p></b>', unsafe_allow_html=True)
+       st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Tax Return: $'+str(int(taxreturn))+'</p></b>', unsafe_allow_html=True)
+       st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Inpocket Income: $'+str(int(inpocketincome))+'</p></b>', unsafe_allow_html=True)
 with col2:
-       st.markdown('<b><p style="color:red;font-size:25px;text-align:center;">Total Deductions: $'+str(int(totaldeductions))+'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:red;font-size:25px;text-align:center;">Tax Owed: $' + str(int(taxowed)) +'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:red;font-size:25px;text-align:center;">Tax Paid: $' + str(int(taxpaid)) + '</p></b>', unsafe_allow_html=True)
-
-st.dataframe(data)
+       st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Total Deductions: $'+str(int(totaldeductions))+'</p></b>', unsafe_allow_html=True)
+       st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Owed: $' + str(int(taxowed)) +'</p></b>', unsafe_allow_html=True)
+       st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Paid: $' + str(int(taxpaid)) + '</p></b>', unsafe_allow_html=True)
+# %%

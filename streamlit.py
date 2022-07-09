@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import openpyxl as op
 from datetime import date,datetime,time,timedelta
 
+#st.set_page_config(layout="wide")
 st.sidebar.title('Personal Budget Model')
 
 
@@ -21,6 +22,7 @@ todayformatted = datetime.today().strftime('%Y-%m-%d')
 
 
 #Adjustable Variables
+ftesalary=(st.sidebar.slider('Full Time Salary', min_value=0, max_value=500000, value=107110, step=100))
 mortgagerate=(st.sidebar.slider('Mortgage Rate %', min_value=0.01, max_value=15.0, value=4.49, step=0.01))/100
 proratahours=st.sidebar.slider('Pro-rata Hours', min_value=0, max_value=38, value=32)
 fuelprice=st.sidebar.slider('Fuel Price', min_value=1.0, max_value=3.0, value=2.3)
@@ -32,8 +34,6 @@ carvalue = 65400
 furniture = 70000
 super = 210862.21
 odometer = 22500
-
-
 
 insurancecar = 12*137.76
 rego = 837.09
@@ -51,7 +51,7 @@ rent = 52*200
 telstra = 12*166
 power = 4*400
 gym = 0
-unifees =  1720.14 
+unifees =  1720.14*2
 maintenance = 615
 wfhdays = 199
 extradeduction=1000
@@ -120,12 +120,25 @@ unicardep = cardep*unicarperc # car depreciation for uni
 unicarcost = unicarrc+unicardep
 
 #Incomes
-pretaxsalary = 107110.5*prorata
+pretaxsalary = ftesalary*prorata
 bonus = 0.07*pretaxsalary*prorata
-salary = pretaxsalary-(((pretaxsalary)-45000)*0.325+5092)
 pension = 26*6.4
-aftertaxincome = salary+pension+salary*0.07
+totalincome = pretaxsalary+pension+bonus+rentalincome
 
+
+if int((pretaxsalary+bonus)) > 180000:      
+       taxpaid = (int((pretaxsalary+bonus))-180000)*0.45+51667
+if int((pretaxsalary+bonus)) <= 180000:
+       taxpaid = (int((pretaxsalary+bonus))-120000)*0.37+29467
+if int((pretaxsalary+bonus)) <= 120000:
+       taxpaid = (int((pretaxsalary+bonus))-45000)*0.325+5092
+if int((pretaxsalary+bonus)) <= 45000:
+       taxpaid = (int((pretaxsalary+bonus))-18200)*0.19
+if int((pretaxsalary+bonus)) <= 18200:
+       taxpaid = 0
+
+aftertaxincome = pretaxsalary+bonus+pension-taxpaid
+superpa=(pretaxsalary+bonus)*.105
 #Expenses
 
 rentalmanagement = (rentalincome*0.09)*1.1
@@ -149,20 +162,30 @@ wfhcost = businessinternet+wfhfixedrate
 #Tax Calculations
 mortgageinterest = mortgagecurrent*mortgagerate
 totaldeductions = rateszucc+waterzucc+rentalmanagement+rentalannual+rentaladmin+advertising+maintenance+mortgageinterest+insurancebuilding+insurancelandlord+capitalworks+capitalallowances+wfhcost+extradeduction+unicarcost+unifees
-totalincome = pretaxsalary+pension+bonus+rentalincome
 taxableincome = totalincome - totaldeductions
-taxowed = (taxableincome-45000)*0.325+5092
-taxpaid = ((pretaxsalary+bonus)-45000)*0.325+5092
+
+if int(taxableincome) > 180000:      
+       taxowed = (taxableincome-180000)*0.45+51667
+if int(taxableincome) <= 180000:
+       taxowed = (taxableincome-120000)*0.37+29467
+if int(taxableincome) <= 120000:
+       taxowed = (taxableincome-45000)*0.325+5092
+if int(taxableincome) <= 45000:
+       taxowed = (taxableincome-18200)*0.19
+if int(taxableincome) <= 18200:
+       taxowed = 0
+if int(taxableincome) <= 0:
+       taxableincome=0
+
 taxreturn = taxpaid - taxowed
 rentalinpocket = rentalincome-rentalmanagement-rentalannual-rentaladmin-advertising-maintenance
 inpocketincome = aftertaxincome+rentalinpocket+taxreturn
 lifeexpenses = mortgagemin+carloanmin+insurancebuilding+insurancecontents+insurancelandlord+insuracehealth+rateszucc+waterzucc+rent+telstra+power+gym+haircuts+rateswang+waterwang+unifees+lifeexpenses+carpa
 savingpotential=inpocketincome-lifeexpenses
 
-
-data = {'Fields':['Total Income','Taxable Income','Tax Return','Inpocket Income','Life Expenses','Total Deductions','Tax Owed','Tax Paid','Saving Potential',]
-       ,'Values':[int(totalincome),int(taxableincome),int(taxreturn),int(inpocketincome),int(lifeexpenses),int(totaldeductions),int(taxowed),int(taxpaid),int(savingpotential)]
-       ,'Colours':['Income','Income','Income','Income','Expense','Expense','Expense','Expense','Output']}
+data = {'Fields':['Total Income','Taxable Income','Tax Return','Inpocket Income','Super','Life Expenses','Total Deductions','Tax Owed','Tax Paid','Saving Potential',]
+       ,'Values':[int(totalincome),int(taxableincome),int(taxreturn),int(inpocketincome),int(superpa),int(lifeexpenses),int(totaldeductions),int(taxowed),int(taxpaid),int(savingpotential)]
+       ,'Colours':['Income','Income','Income','Income','Income','Expense','Expense','Expense','Expense','Output']}
 
 input = pd.DataFrame(data)
 fig = px.bar(input, x='Fields', y='Values', color='Colours')
@@ -171,14 +194,17 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.markdown('<b><p style="color:blue;font-size:20px;text-align:center;">Saving Potential: $'+ str(int(savingpotential))+'</p></b>', unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
        st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Total Income: $'+str(int(totalincome))+'</p></b>', unsafe_allow_html=True)
        st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Taxable Income: $'+str(int(taxableincome))+'</p></b>', unsafe_allow_html=True)
+with col2:       
        st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Tax Return: $'+str(int(taxreturn))+'</p></b>', unsafe_allow_html=True)
        st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Inpocket Income: $'+str(int(inpocketincome))+'</p></b>', unsafe_allow_html=True)
-with col2:
+       st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Super: $'+str(int(superpa))+'</p></b>', unsafe_allow_html=True)
+with col3:
+       st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Expenses: $'+str(int(lifeexpenses))+'</p></b>', unsafe_allow_html=True)
        st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Total Deductions: $'+str(int(totaldeductions))+'</p></b>', unsafe_allow_html=True)
+with col4:
        st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Owed: $' + str(int(taxowed)) +'</p></b>', unsafe_allow_html=True)
        st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Paid: $' + str(int(taxpaid)) + '</p></b>', unsafe_allow_html=True)
-# %%

@@ -1,7 +1,9 @@
 # %%
+from dataclasses import fields
 from pickle import FALSE
 import streamlit as st
 import plotly.express as px
+import plotly.graph_objects as go
 import seaborn as sns
 import xgboost as xgb
 import pandas as pd
@@ -13,20 +15,16 @@ from datetime import date,datetime,time,timedelta
 #st.set_page_config(layout="wide")
 st.sidebar.title('Personal Budget Model')
 
-
-
 status = pd.read_excel (r'E:/Administration/Life.xlsx', sheet_name='Status')
 expenses = pd.read_excel (r'E:/Administration/Life.xlsx', sheet_name='Expenses')
 today=date.today()
 todayformatted = datetime.today().strftime('%Y-%m-%d')
 
-
 #Adjustable Variables
 ftesalary=(st.sidebar.slider('Full Time Salary', min_value=0, max_value=500000, value=107110, step=100))
-mortgagerate=(st.sidebar.slider('Mortgage Rate %', min_value=0.01, max_value=15.0, value=4.49, step=0.01))/100
+mortgagerate=(st.sidebar.slider('Mortgage Rate %', min_value=0.01, max_value=20.0, value=4.49, step=0.01))/100
 proratahours=st.sidebar.slider('Pro-rata Hours', min_value=0, max_value=38, value=32)
-fuelprice=st.sidebar.slider('Fuel Price', min_value=1.0, max_value=3.0, value=2.3)
-
+fuelprice=st.sidebar.slider('Fuel Price', min_value=1.0, max_value=3.0, value=2.3, step=0.01)
 
 #Entered Variables
 housevalue = 600000
@@ -125,7 +123,6 @@ bonus = 0.07*pretaxsalary*prorata
 pension = 26*6.4
 totalincome = pretaxsalary+pension+bonus+rentalincome
 
-
 if int((pretaxsalary+bonus)) > 180000:      
        taxpaid = (int((pretaxsalary+bonus))-180000)*0.45+51667
 if int((pretaxsalary+bonus)) <= 180000:
@@ -183,28 +180,51 @@ inpocketincome = aftertaxincome+rentalinpocket+taxreturn
 lifeexpenses = mortgagemin+carloanmin+insurancebuilding+insurancecontents+insurancelandlord+insuracehealth+rateszucc+waterzucc+rent+telstra+power+gym+haircuts+rateswang+waterwang+unifees+lifeexpenses+carpa
 savingpotential=inpocketincome-lifeexpenses
 
-data = {'Fields':['Total Income','Taxable Income','Tax Return','Inpocket Income','Super','Life Expenses','Total Deductions','Tax Owed','Tax Paid','Saving Potential',]
+#All fields Chart
+data = {'Fields':['Total Income','Taxable Income','Tax Return','Inpocket Income','Super','Expenses','Total Deductions','Tax Owed','Tax Paid','Saving Potential',]
        ,'Values':[int(totalincome),int(taxableincome),int(taxreturn),int(inpocketincome),int(superpa),int(lifeexpenses),int(totaldeductions),int(taxowed),int(taxpaid),int(savingpotential)]
-       ,'Colours':['Income','Income','Income','Income','Income','Expense','Expense','Expense','Expense','Output']}
-
+       ,'Category':['Income','Income','Income','Income','Income','Expense','Expense','Expense','Expense','Estimation']}
 input = pd.DataFrame(data)
-fig = px.bar(input, x='Fields', y='Values', color='Colours')
-fig.update_layout(yaxis_range=[0,150000])
+fig = px.bar(input, x='Fields', y='Values', color='Category')
+#fig.update_layout(yaxis_range=[0,150000])
 st.plotly_chart(fig, use_container_width=True)
 
-st.markdown('<b><p style="color:blue;font-size:20px;text-align:center;">Saving Potential: $'+ str(int(savingpotential))+'</p></b>', unsafe_allow_html=True)
+#Metrics
+col1, col2, col3 = st.columns(3)
+col1.metric("Savings", '$' + str(int(savingpotential)), str(int(int(savingpotential)/int(totalincome)*100)) + '%')
+col2.metric("Expenses", '$' + str(int(lifeexpenses)), str(int(int(lifeexpenses)/int(totalincome)*100)) + '%', delta_color="inverse")
+col3.metric("Tax", '$' + str(int(taxowed)), str(int(int(taxowed)/int(totalincome)*100)) + '%', delta_color="inverse")
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2 = st.columns(2)
 with col1:
-       st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Total Income: $'+str(int(totalincome))+'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Taxable Income: $'+str(int(taxableincome))+'</p></b>', unsafe_allow_html=True)
-with col2:       
-       st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Tax Return: $'+str(int(taxreturn))+'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Inpocket Income: $'+str(int(inpocketincome))+'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Super: $'+str(int(superpa))+'</p></b>', unsafe_allow_html=True)
-with col3:
-       st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Expenses: $'+str(int(lifeexpenses))+'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Total Deductions: $'+str(int(totaldeductions))+'</p></b>', unsafe_allow_html=True)
-with col4:
-       st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Owed: $' + str(int(taxowed)) +'</p></b>', unsafe_allow_html=True)
-       st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Paid: $' + str(int(taxpaid)) + '</p></b>', unsafe_allow_html=True)
+       #Pie Chart
+       data = {'Fields':['Expenses','Saving Potential','Tax Owed']
+              ,'Values':[int(lifeexpenses),int(savingpotential),int(taxowed)]}
+       input = pd.DataFrame(data)
+       fig = px.pie(input, values='Values', names='Fields')
+       st.plotly_chart(fig, use_container_width=True)
+       
+with col2:
+       #Stacked Chart
+       x = ['Value']
+       fig = go.Figure(data=[go.Bar(name='Income',x = x, y = [int(inpocketincome)]),go.Bar(name = 'Super',x = x,y = [int(superpa)]),go.Bar(name = 'Tax',x = x,y = [int(taxowed)])])
+       fig.update_layout(barmode='stack')
+       #fig.update_layout(yaxis_range=[0,200000])
+       st.plotly_chart(fig, use_container_width=True)
+
+#st.markdown('<b><p style="color:blue;font-size:20px;text-align:center;">Saving Potential: $'+ str(int(savingpotential))+'</p></b>', unsafe_allow_html=True)
+
+#col1, col2, col3, col4 = st.columns(4)
+#with col1:
+       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Total Income: $'+str(int(totalincome))+'</p></b>', unsafe_allow_html=True)
+      # st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Taxable Income: $'+str(int(taxableincome))+'</p></b>', unsafe_allow_html=True)
+#with col2:       
+       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Tax Return: $'+str(int(taxreturn))+'</p></b>', unsafe_allow_html=True)
+       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Inpocket Income: $'+str(int(inpocketincome))+'</p></b>', unsafe_allow_html=True)
+       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Super: $'+str(int(superpa))+'</p></b>', unsafe_allow_html=True)
+#with col3:
+       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Expenses: $'+str(int(lifeexpenses))+'</p></b>', unsafe_allow_html=True)
+       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Total Deductions: $'+str(int(totaldeductions))+'</p></b>', unsafe_allow_html=True)
+#with col4:
+       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Owed: $' + str(int(taxowed)) +'</p></b>', unsafe_allow_html=True)
+       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Paid: $' + str(int(taxpaid)) + '</p></b>', unsafe_allow_html=True)

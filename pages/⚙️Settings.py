@@ -10,8 +10,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import openpyxl as op
 from datetime import date,datetime,time,timedelta
+from st_aggrid import AgGrid
 
-st.set_page_config(layout="centered", page_icon="📊", menu_items={
+st.set_page_config(layout="wide", page_icon="⚙️", menu_items={
          'Get Help': 'https://github.com/MichaelJenningsAI/personalfinance',
          'Report a bug': "https://github.com/MichaelJenningsAI/personalfinance/issues",
          'About': "Made by Michael Jennings"
@@ -38,51 +39,92 @@ mortgagerate=(st.sidebar.slider('Mortgage Rate %', min_value=0.01, max_value=20.
 proratahours=st.sidebar.slider('Pro-rata Hours', min_value=0, max_value=38, value=32)
 fuelprice=st.sidebar.slider('Fuel Price', min_value=1.0, max_value=3.0, value=2.3, step=0.01)
 
+#Start of settings Document
+
+st.title('Settings')
+
+checkeducation = st.checkbox("Do you claim any Car Expenses?", value=False)
+
+if checkeducation:
+       col1, col2 = st.columns(2)
+       with col1:
+              container = st.container()
+              carvalue = container.number_input("Car Value", min_value=None, max_value=100000, value=65400, step=1)
+       with col2:
+              container = st.container()
+else:
+       carvalue=1
+
+checkbusiness = st.checkbox("Do you have Business Expenses?", value=False)
+if checkbusiness:
+       col1, col2 = st.columns(2)
+       with col1:
+              container = st.container()
+              wfhdays = container.number_input("How many days (8 Hours) did you work from home?", min_value=None, max_value=365, value=199, step=1)
+       with col2:
+              container = st.container()
+              extradeduction = container.number_input("Extra Deductions", min_value=None, max_value=10000, value=1000, step=1)
+else:
+       wfhdays=0
+       extradeduction=0
+
+checkeducation = st.checkbox("Do you have Education Expenses?", value=False)
+if checkeducation:
+       col1, col2 = st.columns(2)
+       with col1:
+              container = st.container()
+              unidistance = container.number_input("Distance of trip to University", min_value=None, max_value=200.0, value=58.8, step=0.1)
+       with col2:
+              container = st.container()
+              unifreq = container.number_input("How often do you go to Uni per week?", min_value=None, max_value=7, value=2, step=1)
+
 #Entered Variables
 housevalue = 600000
-carvalue = 65400
 furniture = 70000
 super = 210862.21
-odometer = 22500
 
+#Car Details
+carvalue = 65400
+odometer = 22500
+carpurchase = date(2020,9,30)
+carloanmin = 12 * 903.39
+fuelusage=10.2
+tyrecost = 1800     # $for all 4 replaced
+carloanrate=0.0679
+tyrefreq = 30000    # in Kms
+businesscarcap = 60733 # the 2022 cap for car owned for business
 insurancecar = 12*137.76
 rego = 837.09
-unifreq = 2 # how many times a week i go to uni
-rentalincome = 52*625
 
-carloanmin = 12 * 903.39
+
+#Property
+rentalincome = 52*625
 insurancebuilding = 12*128.6
 insurancecontents = 12*42.74
 insurancelandlord = 232.84
-insuracehealth = 12*137.46
 rateszucc = 4*434
 waterzucc = 1547
 rent = 52*200
+rentaladmin = 12*15*1.1
+advertising = 220
+maintenance = 615
+capitalworks = 9420
+capitalallowances = 1631
+
+
+#Bills
+insuracehealth = 12*137.46
 telstra = 12*166
 power = 4*400
 gym = 0
 unifees =  1720.14*2
-maintenance = 615
-wfhdays = 199
-extradeduction=1000
-
-#Fixed Values
-fuelusage=10.2
-tyrecost = 1800     # $for all 4 replaced
-carloanrate=0.0679
-ftehours=38
-tyrefreq = 30000    # in Kms
-businesscarcap = 60733 # the 2022 cap for car owned for business
-unidistance = 58.8 # distance to uni
 haircuts = 52/6*32
 rateswang = 4*203
 waterwang = 4*200
-rentaladmin = 12*15*1.1
-advertising = 220
-capitalworks = 9420
-capitalallowances = 1631
+
 
 #Caluculations
+ftehours=38
 mortgagemin = ((460346.22*(mortgagerate/12)*((1+(mortgagerate/12))**(12*27.5)))/((1+(mortgagerate/12))**(12*27.5)-1))*12
 prorata=proratahours/ftehours
 
@@ -112,7 +154,7 @@ debtvalue = mortgagecurrent+carloancurrent
 #Current Networth
 networth=assetvalue-debtvalue
 
-carpurchase = date(2020,9,30)
+
 cartimeowned = (today-carpurchase).days/365
 kmperyr = (odometer-335)/cartimeowned
 fuelperyr = kmperyr/100*fuelusage # fuel used each year
@@ -192,51 +234,3 @@ inpocketincome = aftertaxincome+rentalinpocket+taxreturn
 lifeexpenses = mortgagemin+carloanmin+insurancebuilding+insurancecontents+insurancelandlord+insuracehealth+rateszucc+waterzucc+rent+telstra+power+gym+haircuts+rateswang+waterwang+unifees+lifeexpenses+carpa
 savingpotential=inpocketincome-lifeexpenses
 
-#All fields Chart
-data = {'Fields':['Total Income','Taxable Income','Tax Return','Inpocket Income','Super','Expenses','Total Deductions','Tax Owed','Tax Paid','Saving Potential',]
-       ,'Values':[int(totalincome),int(taxableincome),int(taxreturn),int(inpocketincome),int(superpa),int(lifeexpenses),int(totaldeductions),int(taxowed),int(taxpaid),int(savingpotential)]
-       ,'Category':['Income','Income','Income','Income','Income','Expense','Expense','Expense','Expense','Estimation']}
-input = pd.DataFrame(data)
-fig = px.bar(input, x='Fields', y='Values', color='Category')
-#fig.update_layout(yaxis_range=[0,150000])
-st.plotly_chart(fig, use_container_width=True)
-
-#Metrics
-col1, col2, col3 = st.columns(3)
-col1.metric("Savings", '$' + str(int(savingpotential)), str(int(int(savingpotential)/int(totalincome)*100)) + '%')
-col2.metric("Expenses", '$' + str(int(lifeexpenses)), str(int(int(lifeexpenses)/int(totalincome)*100)) + '%', delta_color="inverse")
-col3.metric("Tax", '$' + str(int(taxowed)), str(int(int(taxowed)/int(totalincome)*100)) + '%', delta_color="inverse")
-
-col1, col2 = st.columns(2)
-with col1:
-       #Pie Chart
-       data = {'Fields':['Expenses','Saving Potential','Tax Owed']
-              ,'Values':[int(lifeexpenses),int(savingpotential),int(taxowed)]}
-       input = pd.DataFrame(data)
-       fig = px.pie(input, values='Values', names='Fields')
-       st.plotly_chart(fig, use_container_width=True)
-       
-with col2:
-       #Stacked Chart
-       x = ['Value']
-       fig = go.Figure(data=[go.Bar(name='Income',x = x, y = [int(inpocketincome)]),go.Bar(name = 'Super',x = x,y = [int(superpa)]),go.Bar(name = 'Tax',x = x,y = [int(taxowed)])])
-       fig.update_layout(barmode='stack')
-       #fig.update_layout(yaxis_range=[0,200000])
-       st.plotly_chart(fig, use_container_width=True)
-
-#st.markdown('<b><p style="color:blue;font-size:20px;text-align:center;">Saving Potential: $'+ str(int(savingpotential))+'</p></b>', unsafe_allow_html=True)
-
-#col1, col2, col3, col4 = st.columns(4)
-#with col1:
-       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Total Income: $'+str(int(totalincome))+'</p></b>', unsafe_allow_html=True)
-      # st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Taxable Income: $'+str(int(taxableincome))+'</p></b>', unsafe_allow_html=True)
-#with col2:       
-       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Tax Return: $'+str(int(taxreturn))+'</p></b>', unsafe_allow_html=True)
-       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Inpocket Income: $'+str(int(inpocketincome))+'</p></b>', unsafe_allow_html=True)
-       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Super: $'+str(int(superpa))+'</p></b>', unsafe_allow_html=True)
-#with col3:
-       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Expenses: $'+str(int(lifeexpenses))+'</p></b>', unsafe_allow_html=True)
-       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Total Deductions: $'+str(int(totaldeductions))+'</p></b>', unsafe_allow_html=True)
-#with col4:
-       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Owed: $' + str(int(taxowed)) +'</p></b>', unsafe_allow_html=True)
-       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Paid: $' + str(int(taxpaid)) + '</p></b>', unsafe_allow_html=True)

@@ -11,7 +11,13 @@ import matplotlib.pyplot as plt
 import openpyxl as op
 from datetime import date,datetime,time,timedelta
 
-#st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_icon="📜", menu_items={
+         'Get Help': 'https://github.com/MichaelJenningsAI/personalfinance',
+         'Report a bug': "https://github.com/MichaelJenningsAI/personalfinance/issues",
+         'About': "Made by Michael Jennings"
+     }
+ )
+ 
 st.sidebar.title('Personal Budget Model')
 
 status = pd.read_excel (r'E:/Administration/Life.xlsx', sheet_name='Status')
@@ -179,51 +185,4 @@ inpocketincome = aftertaxincome+rentalinpocket+taxreturn
 lifeexpenses = mortgagemin+carloanmin+insurancebuilding+insurancecontents+insurancelandlord+insuracehealth+rateszucc+waterzucc+rent+telstra+power+gym+haircuts+rateswang+waterwang+unifees+lifeexpenses+carpa
 savingpotential=inpocketincome-lifeexpenses
 
-#All fields Chart
-data = {'Fields':['Total Income','Taxable Income','Tax Return','Inpocket Income','Super','Expenses','Total Deductions','Tax Owed','Tax Paid','Saving Potential',]
-       ,'Values':[int(totalincome),int(taxableincome),int(taxreturn),int(inpocketincome),int(superpa),int(lifeexpenses),int(totaldeductions),int(taxowed),int(taxpaid),int(savingpotential)]
-       ,'Category':['Income','Income','Income','Income','Income','Expense','Expense','Expense','Expense','Estimation']}
-input = pd.DataFrame(data)
-fig = px.bar(input, x='Fields', y='Values', color='Category')
-#fig.update_layout(yaxis_range=[0,150000])
-st.plotly_chart(fig, use_container_width=True)
-
-#Metrics
-col1, col2, col3 = st.columns(3)
-col1.metric("Savings", '$' + str(int(savingpotential)), str(int(int(savingpotential)/int(totalincome)*100)) + '%')
-col2.metric("Expenses", '$' + str(int(lifeexpenses)), str(int(int(lifeexpenses)/int(totalincome)*100)) + '%', delta_color="inverse")
-col3.metric("Tax", '$' + str(int(taxowed)), str(int(int(taxowed)/int(totalincome)*100)) + '%', delta_color="inverse")
-
-col1, col2 = st.columns(2)
-with col1:
-       #Pie Chart
-       data = {'Fields':['Expenses','Saving Potential','Tax Owed']
-              ,'Values':[int(lifeexpenses),int(savingpotential),int(taxowed)]}
-       input = pd.DataFrame(data)
-       fig = px.pie(input, values='Values', names='Fields')
-       st.plotly_chart(fig, use_container_width=True)
-       
-with col2:
-       #Stacked Chart
-       x = ['Value']
-       fig = go.Figure(data=[go.Bar(name='Income',x = x, y = [int(inpocketincome)]),go.Bar(name = 'Super',x = x,y = [int(superpa)]),go.Bar(name = 'Tax',x = x,y = [int(taxowed)])])
-       fig.update_layout(barmode='stack')
-       #fig.update_layout(yaxis_range=[0,200000])
-       st.plotly_chart(fig, use_container_width=True)
-
-#st.markdown('<b><p style="color:blue;font-size:20px;text-align:center;">Saving Potential: $'+ str(int(savingpotential))+'</p></b>', unsafe_allow_html=True)
-
-#col1, col2, col3, col4 = st.columns(4)
-#with col1:
-       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Total Income: $'+str(int(totalincome))+'</p></b>', unsafe_allow_html=True)
-      # st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Taxable Income: $'+str(int(taxableincome))+'</p></b>', unsafe_allow_html=True)
-#with col2:       
-       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Tax Return: $'+str(int(taxreturn))+'</p></b>', unsafe_allow_html=True)
-       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Inpocket Income: $'+str(int(inpocketincome))+'</p></b>', unsafe_allow_html=True)
-       #st.markdown('<b><p style="color:green;font-size:20px;text-align:center;">Super: $'+str(int(superpa))+'</p></b>', unsafe_allow_html=True)
-#with col3:
-       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Expenses: $'+str(int(lifeexpenses))+'</p></b>', unsafe_allow_html=True)
-       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Total Deductions: $'+str(int(totaldeductions))+'</p></b>', unsafe_allow_html=True)
-#with col4:
-       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Owed: $' + str(int(taxowed)) +'</p></b>', unsafe_allow_html=True)
-       #st.markdown('<b><p style="color:red;font-size:20px;text-align:center;">Tax Paid: $' + str(int(taxpaid)) + '</p></b>', unsafe_allow_html=True)
+st.table(data=status)

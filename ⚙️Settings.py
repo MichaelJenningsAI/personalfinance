@@ -12,7 +12,7 @@ import openpyxl as op
 from datetime import date,datetime,time,timedelta
 from st_aggrid import AgGrid
 
-st.set_page_config(layout="wide", page_icon="⚙️", menu_items={
+st.set_page_config(layout="centered", page_icon="⚙️", menu_items={
          'Get Help': 'https://github.com/MichaelJenningsAI/personalfinance',
          'Report a bug': "https://github.com/MichaelJenningsAI/personalfinance/issues",
          'About': "Made by Michael Jennings"
@@ -27,9 +27,6 @@ def load_data(input):
 
 status = load_data("Status")
 expenses = load_data("Expenses")
-
-
-
 today=date.today()
 todayformatted = datetime.today().strftime('%Y-%m-%d')
 
@@ -40,45 +37,66 @@ proratahours=st.sidebar.slider('Pro-rata Hours', min_value=0, max_value=38, valu
 fuelprice=st.sidebar.slider('Fuel Price', min_value=1.0, max_value=3.0, value=2.3, step=0.01)
 
 #Start of settings Document
+st.title('Settings')
 
 def inputs(vardesc, varmin, varmax, varval, varstep):
        varname = st.number_input(str(vardesc), min_value=varmin, max_value=varmax, value=varval, step=varstep)
        return varname
 
-st.title('Settings')
+###########Field###############
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+       st.text("")
+       st.markdown('<b><p style="color:Black;font-size:20px;text-align:Right;">Car Value</p></b>', unsafe_allow_html=True)
+with col2:
+       carvalue = st.number_input('Value', min_value=None, max_value=100000, value=65400, step=1)
+with col3:
+       st.text("")
+with col4:
+       st.text("")
+###########End Field###############
 
+###########Field###############
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+       st.text("")
+       st.markdown('<b><p style="color:Black;font-size:20px;text-align:Right;">Rental Income</p></b>', unsafe_allow_html=True)
+with col2:
+       rentalincome = st.number_input('Value', min_value=None, max_value=1000, value=625, step=25)
+with col3:
+       rentalincomefreq = st.selectbox('Frequency',('Weekly', 'Fortnightly', 'Monthly', 'Quarterly', 'Biannually', 'Annually'))
+with col4:
+       rentalincomedate = st.date_input("Last Date", datetime(2022, 7, 11))
+###########End Field###############
 
-checkeducation = st.checkbox("Do you claim any Car Expenses?", value=False)
-if checkeducation:
-       col1, col2, col3 = st.columns(3)
-       with col1:
-              container = st.container()
-              carvalue = container.number_input("Car Value", min_value=None, max_value=100000, value=65400, step=1)
-else:
-       carvalue=1
+###########Field###############
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+       st.text("")
+       st.markdown('<b><p style="color:Black;font-size:20px;text-align:Right;">Extra Deductions</p></b>', unsafe_allow_html=True)
+with col2:
+       extradeduction = st.number_input('Value', min_value=None, max_value=10000, value=1000, step=1)
+with col3:
+       st.text("")
+with col4:
+       st.text("")
+###########End Field###############
 
-checkbusiness = st.checkbox("Do you have Business Expenses?", value=False)
-if checkbusiness:
-       col1, col2, col3 = st.columns(3)
-       with col1:
-              container = st.container()
-              wfhdays = container.number_input("How many days (8 Hours) did you work from home?", min_value=None, max_value=365, value=199, step=1)
-              extradeduction = container.number_input("Extra Deductions", min_value=None, max_value=10000, value=1000, step=1)
-else:
-       wfhdays=0
-       extradeduction=0
+###########Field###############
+col1, col2, col3, col4 = st.columns(4)
+with col1:
+       st.text("")
+       st.markdown('<b><p style="color:Black;font-size:20px;text-align:Right;">WFH Days</p></b>', unsafe_allow_html=True)
+with col2:
+       wfhdays = st.number_input('Value', min_value=None, max_value=365, value=199, step=1)
+with col3:
+       st.text("")
+with col4:
+       st.text("")
+###########End Field###############
 
-checkeducation = st.checkbox("Do you have Education Expenses?", value=False)
-if checkeducation:
-       col1, col2, col3 = st.columns(3)
-       with col1:
-              container = st.container()
-              unidistance = container.number_input("Distance of trip to University", min_value=None, max_value=200.0, value=58.8, step=0.1)
-              unifreq = container.number_input("How often do you go to Uni per week?", min_value=None, max_value=7, value=2, step=1)
-else:
-       unidistance = 0
-       unifreq = 0
-
+unidistance = st.number_input("Distance of trip to University", min_value=None, max_value=200.0, value=58.8, step=0.1)
+unifreq = st.number_input("How often do you go to Uni per week?", min_value=None, max_value=7, value=2, step=1)
 
 #Entered Variables
 housevalue = st.number_input("House Value:", min_value=None, max_value=1000000, value=600000, step=1)
@@ -86,7 +104,7 @@ furniture = st.number_input("Furniture Value:", min_value=None, max_value=100000
 super = st.number_input("Super Value:", min_value=None, max_value=1000000, value=210862, step=1)
 
 #Car Details
-carvalue = inputs("Car Value", 0, 100000, 65400, 1)
+
 odometer = inputs("Odometer", 0, 250000, 22500, 1)
 
 carpurchase = date(2020,9,30)
@@ -109,8 +127,6 @@ rateszucc = 4*434
 waterzucc = 1547
 rent = 52*200
 rentaladmin = 12*15*1.1
-
-
 advertising = 220
 maintenance = 615
 capitalworks = 9420
@@ -127,6 +143,9 @@ haircuts = 52/6*32
 rateswang = 4*203
 waterwang = 4*200
 
+checkeducation = st.checkbox("Do you claim any Car Expenses?", value=False)
+checkbusiness = st.checkbox("Do you have Business Expenses?", value=False)
+checkeducation = st.checkbox("Do you have Education Expenses?", value=False)
 
 #Caluculations
 ftehours=38
